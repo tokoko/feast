@@ -373,11 +373,12 @@ def point_in_time_join(
             feature_table[timestamp_field] <= entity_table[event_timestamp_col],
         )
 
-        if ttl:
-            predicates.append(
-                feature_table[timestamp_field]
-                >= entity_table[event_timestamp_col] - ibis.literal(ttl)
-            )
+        # TODO come up with workaround for TimestampSub in mssql (not supported in ibis)
+        # if ttl:
+        #     predicates.append(
+        #         feature_table[timestamp_field]
+        #         >= entity_table[event_timestamp_col] - ibis.literal(ttl)
+        #     )
 
         feature_table = feature_table.inner_join(
             entity_table, predicates, lname="", rname="{name}_y"
@@ -426,7 +427,9 @@ class IbisRetrievalJob(RetrievalJob):
         return self.table.execute()
 
     def _to_arrow_internal(self, timeout: Optional[int] = None) -> pyarrow.Table:
-        return self.table.to_pyarrow()
+        # TODO to_pyarrow is for some reason failing for mssql in ibis 8.0 (seems to be fixed in 9.0)
+        return pyarrow.Table.from_pandas(self.table.execute())
+        # return  self.table.to_pyarrow()
 
     @property
     def full_feature_names(self) -> bool:

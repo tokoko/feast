@@ -596,7 +596,10 @@ def test_historical_features_containing_backfills(environment):
     driver_fv = FeatureView(
         name="driver_stats",
         entities=[driver],
-        schema=[Field(name="avg_daily_trips", dtype=Int32)],
+        schema=[
+            Field(name="driver_id", dtype=Int32),
+            Field(name="avg_daily_trips", dtype=Int32)
+        ],
         source=driver_stats_data_source,
     )
 
@@ -616,6 +619,7 @@ def test_historical_features_containing_backfills(environment):
     print(str(f"Time to execute job_from_df.to_df() = '{(end_time - start_time)}'\n"))
 
     assert sorted(expected_df.columns) == sorted(actual_df.columns)
+    
     validate_dataframes(
         expected_df,
         actual_df,
