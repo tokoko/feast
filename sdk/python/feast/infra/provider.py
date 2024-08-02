@@ -230,6 +230,15 @@ class Provider(ABC):
         pass
 
     @abstractmethod
+    def online_read_many(
+        self,
+        config: RepoConfig,
+        entity_keys: List[EntityKeyProto],
+        requested_features: List[Tuple[FeatureView, Optional[List[str]]]],
+    ) -> List[List[Tuple[Optional[datetime], Optional[Dict[str, ValueProto]]]]]:
+        pass
+
+    @abstractmethod
     def retrieve_saved_dataset(
         self, config: RepoConfig, dataset: SavedDataset
     ) -> RetrievalJob:

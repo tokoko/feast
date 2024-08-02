@@ -57,6 +57,22 @@ class OnlineStore(ABC):
         pass
 
     @abstractmethod
+    def online_read_many(
+        self,
+        config: RepoConfig,
+        entity_keys: List[EntityKeyProto],
+        requested_features: List[Tuple[FeatureView, Optional[List[str]]]],
+    ) -> List[
+        List[Tuple[Optional[datetime], Optional[Dict[str, ValueProto]]]]
+    ]:
+        fvs = []
+        for fv, features in requested_features:
+            read_rows = self.online_read(config=config, table=fv, entity_keys=entity_keys, requested_features=features)
+            fvs.append(read_rows)
+
+        return zip(*fvs)
+
+    @abstractmethod
     def online_read(
         self,
         config: RepoConfig,

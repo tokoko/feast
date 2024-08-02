@@ -1870,6 +1870,12 @@ class FeatureStore:
             for row in entity_rows
         ]
 
+        read_rows = provider.online_read_many(
+            config=self.config,
+            entity_keys=entity_key_protos,
+            requested_features=(table, requested_features)
+        )
+
         # Fetch data for Entities.
         read_rows = provider.online_read(
             config=self.config,
@@ -1882,28 +1888,29 @@ class FeatureStore:
         # the data to Protobuf once.
         null_value = Value()
         read_row_protos = []
-        for read_row in read_rows:
-            row_ts_proto = Timestamp()
-            row_ts, feature_data = read_row
-            # TODO (Ly): reuse whatever timestamp if row_ts is None?
-            if row_ts is not None:
-                row_ts_proto.FromDatetime(row_ts)
-            event_timestamps = [row_ts_proto] * len(requested_features)
-            if feature_data is None:
-                statuses = [FieldStatus.NOT_FOUND] * len(requested_features)
-                values = [null_value] * len(requested_features)
-            else:
-                statuses = []
-                values = []
-                for feature_name in requested_features:
-                    # Make sure order of data is the same as requested_features.
-                    if feature_name not in feature_data:
-                        statuses.append(FieldStatus.NOT_FOUND)
-                        values.append(null_value)
-                    else:
-                        statuses.append(FieldStatus.PRESENT)
-                        values.append(feature_data[feature_name])
-            read_row_protos.append((event_timestamps, statuses, values))
+        for read_row_all in read_rows:
+            for read_row in read_row_all:
+                row_ts_proto = Timestamp()
+                row_ts, feature_data = read_row
+                # TODO (Ly): reuse whatever timestamp if row_ts is None?
+                if row_ts is not None:
+                    row_ts_proto.FromDatetime(row_ts)
+                event_timestamps = [row_ts_proto] * len(requested_features)
+                if feature_data is None:
+                    statuses = [FieldStatus.NOT_FOUND] * len(requested_features)
+                    values = [null_value] * len(requested_features)
+                else:
+                    statuses = []
+                    values = []
+                    for feature_name in requested_features:
+                        # Make sure order of data is the same as requested_features.
+                        if feature_name not in feature_data:
+                            statuses.append(FieldStatus.NOT_FOUND)
+                            values.append(null_value)
+                        else:
+                            statuses.append(FieldStatus.PRESENT)
+                            values.append(feature_data[feature_name])
+                read_row_protos.append((event_timestamps, statuses, values))
         return read_row_protos
 
     @staticmethod
