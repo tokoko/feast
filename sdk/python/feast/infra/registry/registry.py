@@ -156,28 +156,28 @@ class Registry(BaseRegistry):
     cached_registry_proto_created: Optional[datetime] = None
     cached_registry_proto_ttl: timedelta
 
-    def __new__(
-        cls,
-        project: str,
-        registry_config: Optional[RegistryConfig],
-        repo_path: Optional[Path],
-    ):
-        # We override __new__ so that we can inspect registry_config and create a SqlRegistry without callers
-        # needing to make any changes.
-        if registry_config and registry_config.registry_type == "sql":
-            from feast.infra.registry.sql import SqlRegistry
+    # def __new__(
+    #     cls,
+    #     project: str,
+    #     registry_config: Optional[RegistryConfig],
+    #     repo_path: Optional[Path],
+    # ):
+    #     # We override __new__ so that we can inspect registry_config and create a SqlRegistry without callers
+    #     # needing to make any changes.
+    #     # if registry_config and registry_config.registry_type == "sql":
+    #     #     from feast.infra.registry.sql import SqlRegistry
 
-            return SqlRegistry(registry_config, project, repo_path)
-        elif registry_config and registry_config.registry_type == "snowflake.registry":
-            from feast.infra.registry.snowflake import SnowflakeRegistry
+    #     #     return SqlRegistry(registry_config, project, repo_path)
+    #     if registry_config and registry_config.registry_type == "snowflake.registry":
+    #         from feast.infra.registry.snowflake import SnowflakeRegistry
 
-            return SnowflakeRegistry(registry_config, project, repo_path)
-        elif registry_config and registry_config.registry_type == "remote":
-            from feast.infra.registry.remote import RemoteRegistry
+    #         return SnowflakeRegistry(registry_config, project, repo_path)
+    #     elif registry_config and registry_config.registry_type == "remote":
+    #         from feast.infra.registry.remote import RemoteRegistry
 
-            return RemoteRegistry(registry_config, project, repo_path)
-        else:
-            return super(Registry, cls).__new__(cls)
+    #         return RemoteRegistry(registry_config, project, repo_path)
+    #     else:
+    #         return super(Registry, cls).__new__(cls)
 
     def __init__(
         self,

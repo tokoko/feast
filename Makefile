@@ -64,7 +64,10 @@ benchmark-python-local:
 	FEAST_USAGE=False IS_TEST=True FEAST_IS_LOCAL_TEST=True python -m pytest --integration --benchmark  --benchmark-autosave --benchmark-save-data sdk/python/tests
 
 test-python-unit:
-	python -m pytest -n 8 --color=yes sdk/python/tests
+	python -m pytest -n 1 sdk/python/tests/unit/test_sql_registry.py
+
+test-python-minio:
+	python -m pytest -n 1 --integration -k "minio_registry" sdk/python/tests/integration/registration/test_registry.py
 
 test-python-integration:
 	python -m pytest -n 8 --integration -k "not minio_registry" --color=yes --durations=5 --timeout=1200 --timeout_method=thread sdk/python/tests

@@ -1,6 +1,7 @@
 import uuid
 from datetime import datetime
 from pathlib import Path
+import fsspec
 
 from feast.infra.registry.registry_store import RegistryStore
 from feast.protos.feast.core.Registry_pb2 import Registry as RegistryProto
@@ -10,20 +11,23 @@ from feast.usage import log_exceptions_and_usage
 
 class FileRegistryStore(RegistryStore):
     def __init__(self, registry_config: RegistryConfig, repo_path: Path):
-        registry_path = Path(registry_config.path)
-        if registry_path.is_absolute():
-            self._filepath = registry_path
-        else:
-            self._filepath = repo_path.joinpath(registry_path)
+        self.fs = fsspec.filesystem('file')
+        self.path = registry_config.path
+
+        if not Path(self.path).is_absolute():
+            #TODO add tests for this
+            self.path = repo_path.joinpath(Path(self.path)).as_uri()
+
 
     @log_exceptions_and_usage(registry="local")
     def get_registry_proto(self):
         registry_proto = RegistryProto()
-        if self._filepath.exists():
-            registry_proto.ParseFromString(self._filepath.read_bytes())
+        if self.fs.exists(self.path):
+            with self.fs.open(self.path, mode="rb") as f:
+                registry_proto.ParseFromString(f.read())
             return registry_proto
         raise FileNotFoundError(
-            f'Registry not found at path "{self._filepath}". Have you run "feast apply"?'
+            f'Registry not found at path "{self.path}". Have you run "feast apply"?'
         )
 
     @log_exceptions_and_usage(registry="local")
@@ -32,7 +36,7 @@ class FileRegistryStore(RegistryStore):
 
     def teardown(self):
         try:
-            self._filepath.unlink()
+            self.fs.rm(self.path)
         except FileNotFoundError:
             # If the file deletion fails with FileNotFoundError, the file has already
             # been deleted.
@@ -41,7 +45,10 @@ class FileRegistryStore(RegistryStore):
     def _write_registry(self, registry_proto: RegistryProto):
         registry_proto.version_id = str(uuid.uuid4())
         registry_proto.last_updated.FromDatetime(datetime.utcnow())
-        file_dir = self._filepath.parent
-        file_dir.mkdir(exist_ok=True)
-        with open(self._filepath, mode="wb", buffering=0) as f:
+
+        parent = self.fs._parent(self.path)
+        if not self.fs.exists(parent):
+            self.fs.mkdir(parent)
+
+        with self.fs.open(self.path, mode="wb", buffering=0) as f:
             f.write(registry_proto.SerializeToString())
