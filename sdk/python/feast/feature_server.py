@@ -13,7 +13,6 @@ from fastapi import Depends, FastAPI, Request, Response, status
 from fastapi.logger import logger
 from fastapi.responses import JSONResponse
 from google.protobuf.json_format import MessageToDict
-from prometheus_client import Gauge, start_http_server
 from pydantic import BaseModel
 
 import feast
@@ -34,13 +33,6 @@ from feast.permissions.server.utils import (
     str_to_auth_manager_type,
 )
 
-# Define prometheus metrics
-cpu_usage_gauge = Gauge(
-    "feast_feature_server_cpu_usage", "CPU usage of the Feast feature server"
-)
-memory_usage_gauge = Gauge(
-    "feast_feature_server_memory_usage", "Memory usage of the Feast feature server"
-)
 
 
 # TODO: deprecate this in favor of push features
@@ -293,6 +285,17 @@ if sys.platform != "win32":
 
 def monitor_resources(self, interval: int = 5):
     """Function to monitor and update CPU and memory usage metrics."""
+    import psutil
+    from prometheus_client import Gauge
+
+    # Define prometheus metrics
+    cpu_usage_gauge = Gauge(
+        "feast_feature_server_cpu_usage", "CPU usage of the Feast feature server"
+    )
+    memory_usage_gauge = Gauge(
+        "feast_feature_server_memory_usage", "Memory usage of the Feast feature server"
+    )
+
     logger.debug(f"Starting resource monitoring with interval {interval} seconds")
     p = psutil.Process()
     logger.debug(f"PID is {p.pid}")
@@ -319,6 +322,7 @@ def start_server(
 ):
     if metrics:
         logger.info("Starting Prometheus Server")
+        from prometheus_client import start_http_server
         start_http_server(8000)
 
         logger.debug("Starting background thread to monitor CPU and memory usage")

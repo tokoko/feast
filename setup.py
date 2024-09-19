@@ -57,8 +57,6 @@ REQUIRED = [
     "uvicorn[standard]>=0.14.0,<1",
     "gunicorn; platform_system != 'Windows'",
     "dask[dataframe]>=2024.2.1",
-    "prometheus_client",
-    "psutil",
     "bigtree>=0.19.2",
     "pyjwt",
 ]
@@ -100,7 +98,7 @@ POSTGRES_REQUIRED = [
     "psycopg[binary,pool]>=3.0.0,<4",
 ]
 
-OPENTELEMETRY = ["prometheus_client", "psutil"]
+OPENTELEMETRY_REQUIRED = ["prometheus_client", "psutil"]
 
 MYSQL_REQUIRED = ["pymysql", "types-PyMySQL"]
 
@@ -166,7 +164,6 @@ CI_REQUIRED = (
         "moto<5",
         "mypy>=1.4.1",
         "urllib3>=1.25.4,<3",
-        "psutil==5.9.0",
         "py>=1.11.0",  # https://github.com/pytest-dev/pytest/issues/10420
         "pytest>=6.0.0,<8",
         "pytest-cov",
@@ -215,7 +212,7 @@ CI_REQUIRED = (
     + ELASTICSEARCH_REQUIRED
     + SQLITE_VEC_REQUIRED
     + SINGLESTORE_REQUIRED
-    + OPENTELEMETRY
+    + OPENTELEMETRY_REQUIRED
 )
 
 DOCS_REQUIRED = CI_REQUIRED
@@ -385,7 +382,7 @@ setup(
         "elasticsearch": ELASTICSEARCH_REQUIRED,
         "sqlite_vec": SQLITE_VEC_REQUIRED,
         "singlestore": SINGLESTORE_REQUIRED,
-        "opentelemetry": OPENTELEMETRY,
+        "opentelemetry": OPENTELEMETRY_REQUIRED,
     },
     include_package_data=True,
     license="Apache",
